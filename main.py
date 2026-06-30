@@ -62,4 +62,9 @@ async def get_proxy():
     return {"local_proxy": current_proxy_url}
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    import sys
+    # If running as a compiled PyInstaller executable
+    if getattr(sys, 'frozen', False):
+        uvicorn.run(app, host="127.0.0.1", port=8000)
+    else:
+        uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
