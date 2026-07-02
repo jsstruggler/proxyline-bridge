@@ -2,3 +2,4 @@ fastapi
 uvicorn
 pydantic
 proxy-relay
+rumps; sys_platform == 'darwin'
