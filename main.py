@@ -11,9 +11,16 @@ import platform
 is_mac = platform.system() == "Darwin"
 if is_mac:
     import rumps
+else:
+    import pystray
+    from PIL import Image, ImageDraw
 
-# Global instance of our mac app to update the status
-mac_app = None# Global proxy manager to manage lifecycle of proxies
+# Global instances for UI
+mac_app = None
+win_app = None
+win_status_text = "Status: Waiting for proxy..."
+
+# Global proxy manager to manage lifecycle of proxies
 proxy_manager = ProxyManager()
 current_proxy_url = None
 
@@ -66,6 +73,16 @@ async def set_proxy(proxy: ProxyConfig):
                 mac_app.status_item.title = f"Status: Proxy active (port {port_str})"
             except:
                 mac_app.status_item.title = "Status: Proxy active"
+        elif not is_mac and win_app:
+            win_app.title = "Proxyline Bridge (Active)"
+            try:
+                port_str = local_url.split(":")[-1]
+                global win_status_text
+                win_status_text = f"Status: Proxy active (port {port_str})"
+                win_app.update_menu()
+            except:
+                win_status_text = "Status: Proxy active"
+                win_app.update_menu()
         
         return {"local_proxy": local_url}
     except Exception as e:
@@ -104,5 +121,27 @@ if __name__ == "__main__":
         # Start the native macOS menu bar app loop in the main thread
         mac_app.run()
     else:
-        # Run standard console server on non-macOS platforms
-        run_uvicorn()
+        def create_image():
+            # Generate a simple blue square with "PB" text
+            image = Image.new('RGB', (64, 64), color = (0, 102, 204))
+            d = ImageDraw.Draw(image)
+            d.text((20, 24), "PB", fill=(255, 255, 255))
+            return image
+
+        def on_quit(icon, item):
+            icon.stop()
+
+        menu = pystray.Menu(
+            pystray.MenuItem(lambda text: win_status_text, lambda icon, item: None),
+            pystray.MenuItem("Port: 8000", lambda icon, item: None),
+            pystray.MenuItem("Quit", on_quit)
+        )
+        
+        win_app = pystray.Icon("proxyline-bridge", create_image(), "Proxyline Bridge", menu)
+        
+        # Start the FastAPI server in a background thread
+        api_thread = threading.Thread(target=run_uvicorn, daemon=True)
+        api_thread.start()
+        
+        # Start the native Windows/Linux system tray app loop in the main thread
+        win_app.run()

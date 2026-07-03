@@ -3,3 +3,5 @@ uvicorn
 pydantic
 proxy-relay
 rumps; sys_platform == 'darwin'
+pystray; sys_platform != 'darwin'
+Pillow; sys_platform != 'darwin'
