@@ -14,7 +14,7 @@ jobs:
       contents: write
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
         
     steps:
       - name: Checkout code
@@ -34,7 +34,7 @@ jobs:
       - name: Build executable
         run: |
           pyinstaller proxyline-bridge.spec --clean -y
-          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+          if [[ "${{ matrix.os }}" == macos* ]]; then
             pip install dmgbuild
             dmgbuild -s dmg_settings.py "Proxyline Bridge" dist/ProxylineBridge.dmg
           fi
@@ -45,7 +45,9 @@ jobs:
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             mv dist/proxyline-bridge.exe dist/proxyline-bridge-windows.exe
           elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            mv dist/ProxylineBridge.dmg dist/proxyline-bridge-macos.dmg
+            mv dist/ProxylineBridge.dmg dist/proxyline-bridge-macos-m-series.dmg
+          elif [ "${{ matrix.os }}" = "macos-13" ]; then
+            mv dist/ProxylineBridge.dmg dist/proxyline-bridge-macos-intel.dmg
           else
             mv dist/proxyline-bridge dist/proxyline-bridge-linux
           fi
