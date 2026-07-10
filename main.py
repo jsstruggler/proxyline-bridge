@@ -28,7 +28,7 @@ win_status_text = "Status: Waiting for proxy..."
 proxy_manager = ProxyManager()
 current_proxy_url = None
 
-CURRENT_VERSION = "1.0.7"
+CURRENT_VERSION = "1.0.8"
 GITHUB_REPO = "jsstruggler/proxyline-bridge"
 update_url = None
 
@@ -85,7 +85,7 @@ async def lifespan(app: FastAPI):
     # Shutdown: Clean up all proxies
     await proxy_manager.__aexit__(None, None, None)
 
-app = FastAPI(title="Proxyline Bridge", lifespan=lifespan)
+app = FastAPI(title=f"Proxyline Bridge v{CURRENT_VERSION}", lifespan=lifespan)
 
 class ProxyConfig(BaseModel):
     config: str  # Expected format: ip:port:login:pass
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     if is_mac:
         class ProxylineBridgeApp(rumps.App):
             def __init__(self):
-                super(ProxylineBridgeApp, self).__init__("🌐 Bridge")
+                super(ProxylineBridgeApp, self).__init__(f"🌐 Bridge v{CURRENT_VERSION}")
                 self.status_item = rumps.MenuItem("Status: Waiting for proxy...")
                 self.port_item = rumps.MenuItem("Port: 8000")
                 self.menu = [
@@ -206,7 +206,7 @@ if __name__ == "__main__":
             pystray.MenuItem("Quit", on_quit)
         )
         
-        win_app = pystray.Icon("proxyline-bridge", create_image(), "Proxyline Bridge", menu)
+        win_app = pystray.Icon("proxyline-bridge", create_image(), f"Proxyline Bridge v{CURRENT_VERSION}", menu)
         
         # Start the FastAPI server in a background thread
         api_thread = threading.Thread(target=run_uvicorn, daemon=True)
