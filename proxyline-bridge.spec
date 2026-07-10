@@ -59,8 +59,8 @@ if is_mac:
             'CFBundleDisplayName': 'Proxyline Bridge',
             'CFBundleGetInfoString': 'Proxyline Bridge local server',
             'CFBundleIdentifier': 'com.proxyline.bridge',
-            'CFBundleVersion': '1.0.0',
-            'CFBundleShortVersionString': '1.0.0',
+            'CFBundleVersion': '1.0.7',
+            'CFBundleShortVersionString': '1.0.7',
         },
     )
 else:
