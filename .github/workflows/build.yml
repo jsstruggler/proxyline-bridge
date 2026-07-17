@@ -90,7 +90,7 @@ jobs:
           Section: net
           Priority: optional
           Architecture: ${ARCH}
-          Maintainer: Proxyline
+          Maintainer: Proxyline <support@proxyline.net>
           Description: Proxyline Bridge local server
           EOF
           
