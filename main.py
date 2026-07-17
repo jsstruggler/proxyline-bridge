@@ -32,7 +32,7 @@ win_status_text = "Status: Waiting for proxy..."
 proxy_manager = ProxyManager()
 current_proxy_url = None
 
-CURRENT_VERSION = "1.0.9"
+CURRENT_VERSION = "1.0.10"
 GITHUB_REPO = "jsstruggler/proxyline-bridge"
 update_url = None
 
