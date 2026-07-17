@@ -19,16 +19,14 @@ else:
     import pystray
     from PIL import Image, ImageDraw
 
-# Global instances for UI
 mac_app = None
 win_app = None
 win_status_text = "Status: Waiting for proxy..."
 
-# Global proxy manager to manage lifecycle of proxies
 proxy_manager = ProxyManager()
 current_proxy_url = None
 
-CURRENT_VERSION = "1.0.8"
+CURRENT_VERSION = "1.0.9"
 GITHUB_REPO = "jsstruggler/proxyline-bridge"
 update_url = None
 
@@ -79,24 +77,18 @@ def check_for_updates():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize the proxy manager
     await proxy_manager.__aenter__()
     yield
-    # Shutdown: Clean up all proxies
     await proxy_manager.__aexit__(None, None, None)
 
 app = FastAPI(title=f"Proxyline Bridge v{CURRENT_VERSION}", lifespan=lifespan)
 
 class ProxyConfig(BaseModel):
-    config: str  # Expected format: ip:port:login:pass
+    config: str 
 
 @app.post("/set_proxy")
 async def set_proxy(proxy: ProxyConfig):
-    """
-    Accepts a SOCKS5 config in the format ip:port:login:pass,
-    starts a local unauthenticated HTTP proxy, and returns the local proxy URL.
-    This local URL can be used directly in browser extensions.
-    """
+
     global current_proxy_url
     
     parts = proxy.config.split(":")
@@ -104,24 +96,19 @@ async def set_proxy(proxy: ProxyConfig):
         raise HTTPException(status_code=400, detail="Invalid config format. Must be ip:port:login:pass")
     
     ip, port, login, password = parts
-    # Construct upstream URL according to proxy-relay format
     upstream_url = f"socks5://{login}:{password}@{ip}:{port}"
     
     try:
-        # Stop the old proxy if it exists to avoid port leaks
         if current_proxy_url:
             await proxy_manager.stop(current_proxy_url)
             current_proxy_url = None
             
-        # Create new proxy, returning HTTP proxy for easier browser integration.
         local_url = await proxy_manager.create(upstream_url, local_type="http")
         current_proxy_url = local_url
         
-        # Update Menu Bar app status
         if is_mac and mac_app:
             mac_app.title = "🌐 Active"
             try:
-                # Assuming local_url looks like http://127.0.0.1:port
                 port_str = local_url.split(":")[-1]
                 mac_app.status_item.title = f"Status: Proxy active (port {port_str})"
             except:
@@ -149,7 +136,6 @@ async def get_proxy():
     return {"local_proxy": current_proxy_url}
 
 def run_uvicorn():
-    # Uvicorn needs to be run without reload=True when in a thread
     uvicorn.run(app, host="127.0.0.1", port=8000)
 
 if __name__ == "__main__":
@@ -162,23 +148,19 @@ if __name__ == "__main__":
                 self.menu = [
                     self.status_item,
                     self.port_item,
-                    None, # Separator
+                    None,
                 ]
                 
         mac_app = ProxylineBridgeApp()
         
-        # Start the FastAPI server in a background thread
         api_thread = threading.Thread(target=run_uvicorn, daemon=True)
         api_thread.start()
         
-        # Check for updates in the background
         threading.Thread(target=check_for_updates, daemon=True).start()
         
-        # Start the native macOS menu bar app loop in the main thread
         mac_app.run()
     else:
         def create_image():
-            # Generate a simple blue square with "PB" text
             image = Image.new('RGB', (64, 64), color = (0, 102, 204))
             d = ImageDraw.Draw(image)
             d.text((20, 24), "PB", fill=(255, 255, 255))
@@ -208,12 +190,9 @@ if __name__ == "__main__":
         
         win_app = pystray.Icon("proxyline-bridge", create_image(), f"Proxyline Bridge v{CURRENT_VERSION}", menu)
         
-        # Start the FastAPI server in a background thread
         api_thread = threading.Thread(target=run_uvicorn, daemon=True)
         api_thread.start()
         
-        # Check for updates in the background
         threading.Thread(target=check_for_updates, daemon=True).start()
         
-        # Start the native Windows/Linux system tray app loop in the main thread
         win_app.run()

@@ -14,7 +14,7 @@ jobs:
       contents: write
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest, macos-13]
+        os: [ubuntu-latest, windows-latest, windows-11-arm, macos-latest, macos-13]
         
     steps:
       - name: Checkout code
@@ -23,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -44,6 +44,8 @@ jobs:
         run: |
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             mv dist/proxyline-bridge.exe dist/proxyline-bridge-windows.exe
+          elif [ "${{ matrix.os }}" = "windows-11-arm" ]; then
+            mv dist/proxyline-bridge.exe dist/proxyline-bridge-windows-arm64.exe
           elif [ "${{ matrix.os }}" = "macos-latest" ]; then
             mv dist/ProxylineBridge.dmg dist/proxyline-bridge-macos-m-series.dmg
           elif [ "${{ matrix.os }}" = "macos-13" ]; then
