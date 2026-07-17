@@ -4,7 +4,13 @@ import asyncio
 from proxy_relay import ProxyManager
 import uvicorn
 from contextlib import asynccontextmanager
+import os
 import sys
+
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, 'w')
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, 'w')
 import threading
 import platform
 import urllib.request
@@ -136,7 +142,7 @@ async def get_proxy():
     return {"local_proxy": current_proxy_url}
 
 def run_uvicorn():
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000, access_log=False)
 
 if __name__ == "__main__":
     if is_mac:
