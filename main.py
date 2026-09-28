@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from typing import Optional, Dict, Any
 import asyncio
-from proxy_relay import ProxyManager
+from bridge import ProxyBridgeService, ProxyProtocol
 import uvicorn
 from contextlib import asynccontextmanager
 import os
@@ -31,12 +32,35 @@ mac_app = None
 win_app = None
 win_status_text = "Status: Waiting for proxy..."
 
-proxy_manager = ProxyManager()
-current_proxy_url = None
-
 CURRENT_VERSION = "1.0.14"
 GITHUB_REPO = "jsstruggler/proxyline-bridge"
 update_url = None
+current_proxy_url = None
+
+def update_ui_status(status_text: str, protocol: Optional[str] = None):
+    global win_status_text, current_proxy_url
+    current_proxy_url = bridge_service.current_local_url
+    if is_mac and mac_app:
+        try:
+            if protocol:
+                mac_app.title = f"🌐 Active ({protocol})"
+            else:
+                mac_app.title = f"🌐 Bridge v{CURRENT_VERSION}"
+            mac_app.status_item.title = status_text
+        except Exception as e:
+            print(f"Error updating mac status: {e}")
+    elif not is_mac and win_app:
+        try:
+            win_status_text = status_text
+            if protocol:
+                win_app.title = f"Proxyline Bridge (Active - {protocol})"
+            else:
+                win_app.title = f"Proxyline Bridge v{CURRENT_VERSION}"
+            win_app.update_menu()
+        except Exception as e:
+            print(f"Error updating win status: {e}")
+
+bridge_service = ProxyBridgeService(on_status_change=update_ui_status)
 
 def check_for_updates():
     global update_url
@@ -85,63 +109,49 @@ def check_for_updates():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await proxy_manager.__aenter__()
+    await bridge_service.startup()
     yield
-    await proxy_manager.__aexit__(None, None, None)
+    await bridge_service.shutdown()
 
 app = FastAPI(title=f"Proxyline Bridge v{CURRENT_VERSION}", lifespan=lifespan)
 
 class ProxyConfig(BaseModel):
     config: str 
+    protocol: Optional[str] = None
 
 @app.post("/set_proxy")
 async def set_proxy(proxy: ProxyConfig):
-
     global current_proxy_url
-    
-    parts = proxy.config.split(":")
-    if len(parts) != 4:
-        raise HTTPException(status_code=400, detail="Invalid config format. Must be ip:port:login:pass")
-    
-    ip, port, login, password = parts
-    upstream_url = f"socks5://{login}:{password}@{ip}:{port}"
-    
     try:
-        if current_proxy_url:
-            await proxy_manager.stop(current_proxy_url)
-            current_proxy_url = None
-            
-        local_url = await proxy_manager.create(upstream_url, local_type="http")
-        current_proxy_url = local_url
-        
-        if is_mac and mac_app:
-            mac_app.title = "🌐 Active"
-            try:
-                port_str = local_url.split(":")[-1]
-                mac_app.status_item.title = f"Status: Proxy active (port {port_str})"
-            except:
-                mac_app.status_item.title = "Status: Proxy active"
-        elif not is_mac and win_app:
-            win_app.title = "Proxyline Bridge (Active)"
-            try:
-                port_str = local_url.split(":")[-1]
-                global win_status_text
-                win_status_text = f"Status: Proxy active (port {port_str})"
-                win_app.update_menu()
-            except:
-                win_status_text = "Status: Proxy active"
-                win_app.update_menu()
-        
-        return {"local_proxy": local_url}
+        result = await bridge_service.set_proxy(proxy.config, protocol=proxy.protocol)
+        current_proxy_url = result.get("local_proxy")
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/get_proxy")
 async def get_proxy():
     """Returns the currently active local proxy URL, if any."""
-    if not current_proxy_url:
-        return {"local_proxy": None}
-    return {"local_proxy": current_proxy_url}
+    return await bridge_service.get_proxy()
+
+@app.post("/stop_proxy")
+@app.delete("/proxy")
+async def stop_proxy():
+    """Stops the active proxy, if any."""
+    global current_proxy_url
+    await bridge_service.stop_proxy()
+    current_proxy_url = None
+    return {"status": "stopped"}
+
+@app.get("/protocols")
+async def get_protocols():
+    """Returns supported proxy protocols."""
+    return {
+        "protocols": ["socks5", "http", "shadowsocks", "vless"],
+        "version": CURRENT_VERSION,
+    }
 
 def run_uvicorn():
     uvicorn.run(app, host="127.0.0.1", port=8000, access_log=False)
