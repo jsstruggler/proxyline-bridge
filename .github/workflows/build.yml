@@ -31,6 +31,11 @@ jobs:
           pip install pyinstaller
           pip install -r requirements.txt
 
+      - name: Download Xray Core
+        run: |
+          python -c "from bridge.xray_manager import XrayManager; import shutil, os; p = XrayManager.download_binary(); os.makedirs('bin', exist_ok=True); shutil.copy(p, 'bin/')"
+        shell: bash
+
       - name: Build executable
         run: |
           pyinstaller proxyline-bridge.spec --clean -y

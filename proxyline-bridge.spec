@@ -1,15 +1,30 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
 import sys
 
 is_mac = sys.platform == 'darwin'
 
+extra_binaries = []
+xray_name = 'xray.exe' if sys.platform == 'win32' else 'xray'
+for candidate in [
+    os.path.join('bin', xray_name),
+    os.path.join(os.path.expanduser('~'), '.proxyline-bridge', 'bin', xray_name),
+]:
+    if os.path.exists(candidate):
+        extra_binaries.append((candidate, 'bin'))
+        break
+
 a = Analysis(
     ['main.py'],
-    pathex=[],
-    binaries=[],
+    pathex=['.'],
+    binaries=extra_binaries,
     datas=[],
     hiddenimports=[
+        'bridge',
+        'bridge.config_parser',
+        'bridge.xray_manager',
+        'bridge.proxy_service',
         'uvicorn.logging',
         'uvicorn.loops',
         'uvicorn.loops.auto',
