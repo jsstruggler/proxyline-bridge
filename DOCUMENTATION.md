@@ -250,3 +250,9 @@ pyinstaller proxyline-bridge.spec --clean -y
 ```bash
 pytest -v
 ```
+
+---
+
+## 8. Дополнительные руководства
+
+- [VLESS_AI_GUIDE.md](file:///Users/aleksandr/proxyline-bridge/VLESS_AI_GUIDE.md) — специализированное руководство и база знаний для ИИ-агентов по настройке, генерации и валидации конфигураций VLESS (Reality, Vision, gRPC, WebSocket).
