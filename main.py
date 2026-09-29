@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import asyncio
@@ -114,6 +115,14 @@ async def lifespan(app: FastAPI):
     await bridge_service.shutdown()
 
 app = FastAPI(title=f"Proxyline Bridge v{CURRENT_VERSION}", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=".*",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class ProxyConfig(BaseModel):
     config: str 

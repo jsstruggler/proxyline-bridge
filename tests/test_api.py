@@ -102,3 +102,17 @@ def test_set_proxy_invalid_format(client):
     response = client.post("/set_proxy", json=payload)
     assert response.status_code == 400
     assert "detail" in response.json()
+
+
+def test_cors_headers(client):
+    # Test preflight OPTIONS request
+    headers = {
+        "Origin": "chrome-extension://testextensionid",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "content-type",
+    }
+    response = client.options("/set_proxy", headers=headers)
+    assert response.status_code == 200
+    assert response.headers.get("access-control-allow-origin") == "chrome-extension://testextensionid"
+    assert response.headers.get("access-control-allow-credentials") == "true"
+
