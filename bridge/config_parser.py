@@ -81,6 +81,8 @@ class ParsedProxyConfig(BaseModel):
     alpn: Optional[List[str]] = None
     allow_insecure: bool = False
 
+    header_type: Optional[str] = None
+
     # Reality specific settings
     public_key: Optional[str] = None
     short_id: Optional[str] = None
@@ -177,13 +179,13 @@ class ParsedProxyConfig(BaseModel):
                     "serviceName": self.grpc_service_name or "",
                     "multiMode": self.grpc_multi_mode,
                 }
-            elif net == "tcp" and self.ws_path:
-                # HTTP header on TCP
+            elif net == "tcp" and self.header_type == "http" and sec != "reality":
+                # HTTP header obfuscation on raw TCP (only when explicitly requested and not Reality)
                 stream_settings["tcpSettings"] = {
                     "header": {
                         "type": "http",
                         "request": {
-                            "path": [self.ws_path],
+                            "path": [self.ws_path or "/"],
                             "headers": {"Host": [self.ws_host or self.host]},
                         },
                     }
@@ -301,9 +303,10 @@ def parse_vless_url(url_str: str) -> ParsedProxyConfig:
     public_key = get_param("pbk", get_param("publicKey"))
     short_id = get_param("sid", get_param("shortId"))
     spider_x = get_param("spx", get_param("spiderX", "/"))
+    header_type = get_param("headerType")
 
     # WebSocket settings
-    ws_path = get_param("path", "/")
+    ws_path = get_param("path", "/" if network == "ws" else None)
     ws_host = get_param("host")
 
     # gRPC settings
@@ -327,6 +330,7 @@ def parse_vless_url(url_str: str) -> ParsedProxyConfig:
         public_key=public_key,
         short_id=short_id,
         spider_x=spider_x,
+        header_type=header_type,
         ws_path=ws_path,
         ws_host=ws_host,
         grpc_service_name=grpc_service_name,

@@ -127,6 +127,7 @@ def test_vless_reality():
     assert reality["serverName"] == "yahoo.com"
     assert reality["publicKey"] == "WhVUiqgkpQOO10__jJjcevjRIIoWlZUdn-Tj3t5E2kY"
     assert reality["shortId"] == "123456"
+    assert "tcpSettings" not in outbound["streamSettings"]
 
 
 def test_vless_websocket_tls():
