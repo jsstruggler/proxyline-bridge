@@ -126,7 +126,7 @@ curl http://127.0.0.1:8000/protocols
 ```json
 {
   "protocols": ["socks5", "http", "shadowsocks", "vless"],
-  "version": "1.0.14"
+  "version": "1.0.15"
 }
 ```
 

@@ -33,7 +33,7 @@ mac_app = None
 win_app = None
 win_status_text = "Status: Waiting for proxy..."
 
-CURRENT_VERSION = "1.0.14"
+CURRENT_VERSION = "1.0.15"
 GITHUB_REPO = "jsstruggler/proxyline-bridge"
 update_url = None
 current_proxy_url = None

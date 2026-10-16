@@ -206,7 +206,7 @@ proxyline-bridge/
 ```json
 {
   "protocols": ["socks5", "http", "shadowsocks", "vless"],
-  "version": "1.0.14"
+  "version": "1.0.15"
 }
 ```
 
@@ -216,7 +216,7 @@ proxyline-bridge/
 
 Приложение автоматически интегрируется в панель задач/строку меню:
 - **macOS**: используется библиотека `rumps`. В панели меню отображается:
-  - В режиме ожидания: `🌐 Bridge v1.0.14` (в меню: `Status: Waiting for proxy...`).
+  - В режиме ожидания: `🌐 Bridge v1.0.15` (в меню: `Status: Waiting for proxy...`).
   - При активном прокси: `🌐 Active (VLESS)` (в меню: `Status: Proxy active (port 51234, VLESS)`).
 - **Windows / Linux**: используется `PySide6` (`QSystemTrayIcon`). Всплывающая подсказка и меню обновляются динамически при установке или смене прокси.
 
